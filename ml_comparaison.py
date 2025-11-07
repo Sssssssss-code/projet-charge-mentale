@@ -69,6 +69,8 @@ def compare_diff_class_mean(X, y):
     lin_svc_acc = 0
     svc_f1 = 0
     svc_acc = 0
+    svc_poly_f1 = 0
+    svc_poly_acc = 0
     rd_forest_f1 = 0
     rd_forest_acc = 0
     
@@ -85,11 +87,11 @@ def compare_diff_class_mean(X, y):
         lin_svc_acc += accuracy_score(y_test, lin_svc.predict(X_test))
 
 
-        # SVC
-        tuned_parameters = {'degree': range(2,6), 'C': [0.001, 0.01, 0.1, 1]}
+        # SVC rbf
+        tuned_parameters = {'degree': range(2, 5), 'gamma': [1e-7, 1e-6, 1e-5, 0.0001, 0.1], 'C': [0.001, 0.01, 0.1, 1]}
         my_kfold = KFold(n_splits=10)
 
-        SVC_grid = GridSearchCV(SVC(kernel='poly'),
+        SVC_grid = GridSearchCV(SVC(kernel='rbf'),
                                 tuned_parameters,
                                 cv=my_kfold,
                                 n_jobs=-1)
@@ -97,7 +99,21 @@ def compare_diff_class_mean(X, y):
 
         svc_f1 += f1_score(y_test, SVC_grid.predict(X_test))
         svc_acc += accuracy_score(y_test, SVC_grid.predict(X_test))
+        print(SVC_grid.best_params_)
 
+
+        # SVC poly
+        tuned_parameters = {'degree': range(2,6), 'C': [0.001, 0.01, 0.1, 1]}
+        my_kfold = KFold(n_splits=10)
+
+        SVC_poly_grid = GridSearchCV(SVC(kernel='poly'),
+                                tuned_parameters,
+                                cv=my_kfold,
+                                n_jobs=-1)
+        SVC_poly_grid.fit(X_train, y_train)
+
+        svc_poly_f1 += f1_score(y_test, SVC_poly_grid.predict(X_test))
+        svc_poly_acc += accuracy_score(y_test, SVC_poly_grid.predict(X_test))
 
         # Random Forest
         random_forest = RandomForestClassifier(n_estimators=500)
@@ -110,9 +126,13 @@ def compare_diff_class_mean(X, y):
     print(f"  f1:  {lin_svc_f1/10:.4f}")
     print(f"  acc: {lin_svc_acc/10:.4f}")
 
-    print("\n SVC:")
+    print("\n SVC with rbf:")
     print(f"  f1:  {svc_f1/10:.4f}")
     print(f"  acc: {svc_acc/10:.4f}")
+
+    print("\n SVC with poly:")
+    print(f"  f1:  {svc_poly_f1/10:.4f}")
+    print(f"  acc: {svc_poly_acc/10:.4f}")
 
     print("\n Random Forest:")
     print(f"  f1:  {rd_forest_f1/10:.4f}")
@@ -131,3 +151,8 @@ if __name__ == "__main__":
     compare_diff_class_mean(feat_pix_ppg, label)
     print("all features")
     compare_diff_class_mean(all_features, label)
+    
+
+# normalisation z-score pour données cardiaques (pas avec l'EDA)
+# ou min-max
+
