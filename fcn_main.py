@@ -24,7 +24,7 @@ for folder_name in os.walk("data/MAUS/Data/Raw_data/"):
         for trial in  pd.read_csv(f"{folder_name[0]}/pixart.csv").to_numpy().transpose():
             x_pix_ppg.append(list(trial.astype(np.float32)))
         for trial in pd.read_csv(f"data/MAUS/Subjective_rating/{folder_name[0][-3:]}/NASA_TLX.csv").iloc[7, 1:7].to_numpy():
-            y.append(np.float32(trial)/100)
+            y.append(np.float32(trial))
 
 # resample data to 4Hz on 30 seconds
 resample_size = 120
@@ -80,7 +80,8 @@ y_test) = train_test_split(
     x_gsr, 
     x_inf_ppg,
     y,
-    train_size=0.8
+    train_size=0.8,
+    random_state=42
 )
 
 # resampled data loaders
@@ -120,7 +121,7 @@ y_train_loader = torch.utils.data.DataLoader(torch.tensor(y_train), shuffle=True
 y_test_loader = torch.utils.data.DataLoader(torch.tensor(y_test), shuffle=True, batch_size=12)
 
 
-
+#grouping inputs and input lengths
 inputs= [x_ecg_train_loader, x_gsr_train_loader, x_inf_ppg_train_loader]
 input_lengths = [
     max(len(s) for s in x_ecg_train),
@@ -132,8 +133,7 @@ fcn_net=FCNModel(num_signals=3, kernel_size=4, input_lengths=input_lengths)
 
 
 loss_func=torch.nn.MSELoss()
-optim_adam=torch.optim.Adam(params= fcn_net.parameters())
-
-train(fcn_net, [x_ecg_train_norm_loader, x_gsr_train_norm_loader, x_inf_ppg_train_norm_loader],  [x_ecg_test_norm_loader, x_gsr_test_norm_loader, x_inf_ppg_test_norm_loader],  y_train_loader, y_test_loader, loss_func, optim_adam, n_epochs=20)
-#train(fcn_net, [x_ecg_train_loader, x_gsr_train_loader, x_inf_ppg_train_loader],  [x_ecg_test_loader, x_gsr_test_loader, x_inf_ppg_test_loader],  y_train_loader, y_test_loader, loss_func, optim_adam, n_epochs=20)
+optim_adam=torch.optim.Adam(params= fcn_net.parameters(), lr=0.001, weight_decay=0)
+print(type(optim_adam))
+train(fcn_net, inputs,  [x_ecg_test_loader, x_gsr_test_loader, x_inf_ppg_test_loader],  y_train_loader, y_test_loader, loss_func, optim_adam, n_epochs=10)
 
