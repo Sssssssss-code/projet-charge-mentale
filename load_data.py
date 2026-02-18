@@ -211,7 +211,7 @@ for i in range (len(x_gsr_res)) :
     t = np.linspace(0,30,fs*30)
     signal = x_gsr_res[i]
     f,time,Sxx = spectrogram(signal,fs=fs,nperseg=32,noverlap=16)
-    x_gsr_res[i] = Sxx
+    x_gsr_res[i] = Sxx  
 
 #pour x_inf_ppg_res : 
 for i in range (len(x_inf_ppg_res)) : 
