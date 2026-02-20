@@ -14,23 +14,22 @@ def feature_extraction(y_batch,i) :
         res.append(sample[i])
     return res
 
-
-resnet = models.resnet18(weights='DEFAULT')
-resnet.conv1 = nn.Conv2d(4,64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3))
-resnet.fc = torch.nn.Linear(in_features=512, out_features=1)
-
-for param in resnet.parameters():
-    param.requires_grad = False
-
-for param in resnet.fc.parameters():
-	param.requires_grad = True
-
 class FCNModel(nn.Module):
     def __init__(self):
         super().__init__()
 
         # separates all features in separate branches 
-        self.branches = nn.ModuleList([resnet for _ in range(6)])
+        self.branches = nn.ModuleList([models.resnet18(weights='DEFAULT') for _ in range(6)])
+        for resnet in self.branches:
+            resnet.conv1 = nn.Conv2d(4,64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3))
+            resnet.fc = torch.nn.Linear(in_features=512, out_features=1)
+            
+            for param in resnet.parameters():
+                param.requires_grad = False
+
+            for param in resnet.fc.parameters():
+                param.requires_grad = True
+            
 
 
     def forward(self, x_batch, weight_batch):
@@ -95,8 +94,8 @@ def train_pretrained(train_freq_data_loader, valid_freq_data_loader, optimizer, 
         plt.plot(range(len(train_loss_list)), train_loss_list, label='train')
         plt.plot(range(len(valid_loss_list)), valid_loss_list, label='valid')
             
-        print(f'test mse: {valid_epoch(test_freq_data_loader, loss_fn, model)}')
-        print(f'test mae: {valid_epoch(test_freq_data_loader, nn.L1Loss(), model)}')
+        #print(f'test mse: {valid_epoch(test_freq_data_loader, loss_fn, model)}')
+        #print(f'test mae: {valid_epoch(test_freq_data_loader, nn.L1Loss(), model)}')
 
         plt.legend()
         plt.show()
@@ -135,6 +134,8 @@ if __name__ == "__main__":
     model = FCNModel()
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    
+    train_pretrained(train_freq_data_loader=train_freq_data_loader, valid_freq_data_loader=valid_freq_data_loader, loss_fn=criterion, model=model, optimizer=optimizer, n_epochs=80)
     
     train_lopo_pretrained(train_freq_data_loader_list, test_freq_data_loader_list, n_epochs=20, verb=0)
 
