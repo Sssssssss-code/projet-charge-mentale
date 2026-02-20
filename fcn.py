@@ -224,3 +224,26 @@ def test_model(_net, test_loader, loss_func):
 
     avg_loss = tot_loss / n_samples if n_samples > 0 else 0.0
     return avg_loss
+
+def train_lopo_FCN(train_data_loader_list, valid_data_loader_list, n_epochs, verb=1):
+    if len(train_data_loader_list) != len(valid_data_loader_list):
+        raise TabError(f"different size for train_data_loader_list and valid_data_loader_list\n\
+                        got {len(train_data_loader_list)} and {len(valid_data_loader_list)}")
+    else:
+        valid_loss_list = []
+        for i in range(len(train_data_loader_list)):
+            model = FCNModel(num_signals=3, kernel_size=7)
+            optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+            loss_fn = torch.nn.MSELoss()
+            train_data_loader = train_data_loader_list[i]
+            test_data_loader = valid_data_loader_list[i]
+            valid_loss = train(train_loader=train_data_loader,
+                                    valid_loader=test_data_loader,
+                                    optim=optimizer,
+                                    loss_func=loss_fn,
+                                    n_epochs=n_epochs,
+                                    _net=model)
+            valid_loss_list.append(valid_loss)
+            print(f'valid_loss: {valid_loss}')
+        plt.scatter(list(range(len(train_data_loader_list))), valid_loss_list)
+        plt.show()

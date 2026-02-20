@@ -105,16 +105,19 @@ train_freq_data_loader_list = []
 test_freq_data_loader_list = []
 train_res_data_loader_list = []
 test_res_data_loader_list = []
+train_data_loader_list = []
+test_data_loader_list = []
 
 for patient_index in range(NUM_PATIENTS):
     train_indices_lopo = list(range(NUM_PATIENTS))
     train_indices_lopo.remove(patient_index)
-    
-    # res data
+
+
+    # resampled data
     resample_size = 120
     x_ecg_res = [resample(x, resample_size) for x in x_ecg]
     x_gsr_res = [resample(x, resample_size) for x in x_gsr]
-    x_inf_ppg_res = [resample(x, resample_size) for x in x_inf_ppg]
+    x_inf_ppg_res = [resample(x, resample_size) for x in x_inf_ppg] 
     x_pix_ppg_res = [resample(x, resample_size) for x in x_pix_ppg]
 
     train_indices_res = [x * (len(x_ecg_res) // NUM_PATIENTS) + i for i in range(len(x_ecg_res) // NUM_PATIENTS) for x in train_indices_lopo]
@@ -132,8 +135,27 @@ for patient_index in range(NUM_PATIENTS):
     
     train_res_data_loader_list.append(_train_res_data_loader)
     test_res_data_loader_list.append(_test_res_data_loader)
+    
+    
+    # not resampled data (FCN)
+    train_indices_normal = [x * (len(x_ecg) // NUM_PATIENTS) + i for i in range(len(x_ecg) // NUM_PATIENTS) for x in train_indices_lopo]
+    test_indices_normal = [patient_index * (len(x_ecg) // NUM_PATIENTS) + i for i in range(len(x_ecg) // NUM_PATIENTS)]
+    
+    _x_train_list, _, _x_test_list, y_train, _, y_test = split_data([x_inf_ppg, x_ecg, x_gsr, x_pix_ppg], y, train_indices_res, [], test_indices_res)
+    
+    train_dataset = FcnDataset(list(zip(_x_train_list[0],
+                                _x_train_list[1], 
+                                _x_train_list[2], 
+                                _x_train_list[3])), y_train)
+    test_dataset = FcnDataset(list(zip(_x_test_list[0],
+                                _x_test_list[1],
+                                _x_test_list[2],
+                                _x_test_list[3],)), y_test)
 
-    #pour x_ecg_res : 
+    train_data_loader_list.append(torch.utils.data.DataLoader(dataset=train_dataset, shuffle=True, batch_size=12))
+    test_data_loader_list.append(torch.utils.data.DataLoader(dataset=test_dataset, shuffle=True, batch_size=12))
+
+    # spectrogramm for pretraining
     for i in range (len(x_ecg_res)) :
         fs = 4
         t = np.linspace(0,30,fs*30)
@@ -141,7 +163,6 @@ for patient_index in range(NUM_PATIENTS):
         f,time,Sxx = spectrogram(signal,fs=fs,nperseg=32,noverlap=16)
         x_ecg_res[i] = Sxx
 
-    #pour x_gsr_res : 
     for i in range (len(x_gsr_res)) :
         fs = 4
         t = np.linspace(0,30,fs*30)
@@ -149,7 +170,6 @@ for patient_index in range(NUM_PATIENTS):
         f,time,Sxx = spectrogram(signal,fs=fs,nperseg=32,noverlap=16)
         x_gsr_res[i] = Sxx
 
-    #pour x_inf_ppg_res : 
     for i in range (len(x_inf_ppg_res)) : 
         fs = 4
         t = np.linspace(0,30,fs*30)
@@ -157,7 +177,6 @@ for patient_index in range(NUM_PATIENTS):
         f,time,Sxx = spectrogram(signal,fs=fs,nperseg=32,noverlap=16)
         x_inf_ppg_res[i] = Sxx
 
-    #pour x_pix_ppg_res : 
     for i in range (len(x_pix_ppg_res)) : 
         fs = 4
         t = np.linspace(0,30,fs*30)
@@ -168,7 +187,6 @@ for patient_index in range(NUM_PATIENTS):
     final_signal = np.stack([x_ecg_res, x_gsr_res, x_inf_ppg_res, x_pix_ppg_res], axis=0)   
     final_signal = final_signal.transpose(1,0,2,3)
 
-    # resampled data loaders
     x_train_res_list, _, x_test_res_list, y_freq_train, _, y_freq_test = split_data([final_signal], y, train_indices, [], test_indices)
 
     train_freq_data_loader_list.append(torch.utils.data.DataLoader(list(zip(x_train_res_list[0], y_freq_train, y_weight)), batch_size=32, shuffle=False))
