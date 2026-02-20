@@ -78,7 +78,7 @@ def train_LSTM(train_res_data_loader, valid_res_data_loader, optimizer, loss_fn,
             valid_loss = valid_epoch(valid_res_data_loader, loss_fn, model)
             valid_loss_list.append(valid_loss)
         
-        print(f"Epoch {epoch+1}/{n_epochs}, Loss: {(epoch_loss/n_samples):.4f}, Valid loss; {valid_loss:.4f}")
+        print(f"Epoch {epoch+1}/{n_epochs}, Loss: {(epoch_loss/n_samples):.4f}, Valid loss: {valid_loss:.4f}")
         train_loss_list.append(epoch_loss/n_samples)
         
     if verb:
