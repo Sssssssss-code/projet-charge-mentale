@@ -3,3 +3,4 @@ __pycache__
 *.pyc
 splits_maus
 *.h5py
+test.ipynb
