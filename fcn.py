@@ -186,13 +186,15 @@ def train(_net, train_loader, valid_loader, loss_func, optim, n_epochs):
 
         #training loop
         train_loss=epoch_train(_net, train_loader, loss_func, optim)
-        train_loss_list.append(train_loss)
+        if epoch>0:
+            train_loss_list.append(train_loss)
 
         with torch.no_grad():
             #valid ation
             valid_loss = epoch_valid(_net, valid_loader, loss_func)
             _net.train()
-            valid_loss_list.append(valid_loss)
+            if epoch>0:
+                valid_loss_list.append(valid_loss)
         t_end=t.time()
         print(f'Epoch {epoch}:  train loss {train_loss}, valid loss {valid_loss}')
         print(f'Temps écoulé: {t_end-t_start}')
@@ -237,7 +239,7 @@ def train_lopo_FCN(train_data_loader_list, valid_data_loader_list, n_epochs, ver
             loss_fn = torch.nn.MSELoss()
             train_data_loader = train_data_loader_list[i]
             test_data_loader = valid_data_loader_list[i]
-            valid_loss = train(train_loader=train_data_loader,
+            _,valid_loss = train(train_loader=train_data_loader,
                                     valid_loader=test_data_loader,
                                     optim=optimizer,
                                     loss_func=loss_fn,
