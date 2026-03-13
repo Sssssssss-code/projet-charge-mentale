@@ -123,12 +123,12 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     loss_fn = nn.MSELoss()
     
-    n_epochs = 20    
+    n_epochs = 50    
     
-    train_lopo_LSTM(train_res_data_loader_list=train_res_data_loader_list,
+    """train_lopo_LSTM(train_res_data_loader_list=train_res_data_loader_list,
                     valid_res_data_loader_list=test_res_data_loader_list,
                     n_epochs=10,
-                    verb=0)
+                    verb=0)"""
     
     train_LSTM(train_res_data_loader=train_res_data_loader,
                valid_res_data_loader=valid_res_data_loader,
