@@ -245,7 +245,8 @@ def train_lopo_FCN(train_data_loader_list, valid_data_loader_list, n_epochs, ver
                                     loss_func=loss_fn,
                                     n_epochs=n_epochs,
                                     _net=model)
-            valid_loss_list.append(valid_loss)
-            print(f'valid_loss: {valid_loss}')
+            valid_loss_list.append(valid_loss[-1])
+            print(f'valid_loss: {valid_loss[-1]}')
         plt.scatter(list(range(len(train_data_loader_list))), valid_loss_list)
         plt.show()
+        return valid_loss_list
